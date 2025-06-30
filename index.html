@@ -249,7 +249,19 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js" 
+            integrity="sha512-Gdugl3pEA7V5P3d96iJvj/hzH3O6kQvgJq5g6E9tY2RjT+VGJdT1/o+mJqkV1gP+hhAhIqXEIrYrEMcGEFRWLg==" 
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+        // Fallback QR code generator function in case CDN fails
+        function fallbackQRGenerate() {
+            if (typeof QRCode === 'undefined') {
+                console.error('QRCode library failed to load from CDN');
+                showError('QR Code library failed to load. Please check your internet connection and try again.');
+                return false;
+            }
+            return true;
+        }
     <script>
         let currentQRCode = null;
         let selectedSize = 256;
@@ -308,11 +320,17 @@
                 return;
             }
 
+            // Check if QRCode library is loaded
+            if (!fallbackQRGenerate()) {
+                return;
+            }
+
             // Clear previous QR code
             document.getElementById('qrcode').innerHTML = '';
             
-            // Generate new QR code
-            QRCode.toCanvas(text, {
+            try {
+                // Generate new QR code
+                QRCode.toCanvas(text, {
                 width: selectedSize,
                 height: selectedSize,
                 color: {
@@ -332,6 +350,10 @@
                 document.getElementById('qrResult').classList.add('show');
                 showSuccess('QR code generated successfully!');
             });
+            } catch (err) {
+                console.error('QR Generation Error:', err);
+                showError('Failed to generate QR code: ' + err.message);
+            }
         }
 
         function downloadQR() {
@@ -355,7 +377,13 @@
                 return;
             }
 
-            QRCode.toString(text, {
+            // Check if QRCode library is loaded
+            if (!fallbackQRGenerate()) {
+                return;
+            }
+
+            try {
+                QRCode.toString(text, {
                 type: 'svg',
                 width: selectedSize,
                 height: selectedSize,
@@ -380,6 +408,10 @@
                 URL.revokeObjectURL(url);
                 showSuccess('QR code downloaded as SVG!');
             });
+            } catch (err) {
+                console.error('SVG Generation Error:', err);
+                showError('Failed to generate SVG: ' + err.message);
+            }
         }
 
         // Allow Enter key to generate QR code
